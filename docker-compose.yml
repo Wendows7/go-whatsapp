@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+
+#  whatsapp-webhook:
+#    image: go-whatsapp:latest
+#    ports:
+#      - "8080:8080"
+#    volumes:
+#      - ./app.env:/whatsapp-webhook/app.env
