@@ -9,9 +9,9 @@ services:
     ports:
       - "5432:5432"
 
-#  whatsapp-webhook:
-#    image: go-whatsapp:latest
-#    ports:
-#      - "8080:8080"
-#    volumes:
-#      - ./app.env:/whatsapp-webhook/app.env
+  app:
+    image: go-whatsapp:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app.env:/whatsapp-webhook/app.env
