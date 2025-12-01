@@ -43,25 +43,25 @@ Go Whatsapp is my learning golang project, build with go language and use whatsm
 - Set up the PostgreSQL database and update the connection details in the `app.env` file.
 
 ## Usage
-- /api/webhook/send-message : to send text message to whatsapp number,
-  example payload:
+- /api/send-message : to send text message to whatsapp number
+
+  example payload to whatsapp number:
   ```json
   {
-    "to": "6281234567890",
+    "number": "6281234567890",
     "message": "Hello, this is a test message from Go Whatsapp!",
     "token_key": "your_secret"
   }
   ```
-- /api/webhook/send-group : to send text message to whatsapp group,
-  example payload:
+  example payload to whatsapp group:
   ```json
   {
-    "to": "123123123@g.us",
+    "number": "123123123@g.us",
     "message": "Hello, this is a test message to the group from Go Whatsapp!",
     "token_key": "your_secret"
   }
     ```
-- /api/webhook/send-alert?token_key=123&?to=6281222123123 : to send alert message based on prometheus alertmanager structure data, example payload:
+- /api/webhook/send-alert?token_key=123&?number=6281222123123 : to send alert message based on prometheus alertmanager structure data, example payload:
   ```json
   {
     "receiver": "whatsapp-notifications",

@@ -34,7 +34,7 @@ func main() {
 	}
 	api.SendAlerting(client, ctx) // init API Endpoint
 	api.SendMessage(client, ctx)  // init API Endpoint
-	api.SendGroup(client, ctx)    // init API Endpoint
+	//api.SendGroup(client, ctx)    // init API Endpoint
 
 	// Init HTTP server
 	go func() {
