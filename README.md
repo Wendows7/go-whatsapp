@@ -61,7 +61,7 @@ Go Whatsapp is my learning golang project, build with go language and use whatsm
     "token_key": "your_secret"
   }
     ```
-- /api/webhook/send-alert?token_key=123&?number=6281222123123 : to send alert message based on prometheus alertmanager structure data, example payload:
+- /api/send-alert?token_key=123&?number=6281222123123 : to send alert message based on prometheus alertmanager structure data, example payload:
   ```json
   {
     "receiver": "whatsapp-notifications",
