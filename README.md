@@ -58,7 +58,9 @@ Go Whatsapp is my learning golang project, build with go language and use whatsm
   {
     "number": "123123123@g.us",
     "message": "Hello, this is a test message to the group from Go Whatsapp!",
-    "token_key": "your_secret"
+    "token_key": "your_secret",
+   //provide array of number to mention people in group
+    "mention_number": ["6281234567890","6280987654321"]
   }
     ```
 - /api/send-alert?token_key=123&?number=6281222123123 : to send alert message based on prometheus alertmanager structure data, example payload:
