@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"go-whatsapp/config"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/binary/proto"
@@ -71,6 +72,7 @@ func SendMessage(client *whatsmeow.Client, ctx context.Context) {
 				Status:  false,
 			}
 			json.NewEncoder(w).Encode(response)
+			fmt.Println("Token key tidak valid:", req.PrivateKey)
 			return
 		}
 
@@ -118,8 +120,7 @@ func SendMessage(client *whatsmeow.Client, ctx context.Context) {
 			mentionText := req.Message + "\n"
 
 			for _, num := range *req.MentionNumber {
-				//formatted := numberFormatin(num) + "@s.whatsapp.net"
-				formatedNum := num + "@s.whatsapp.net"
+				formatedNum := numberFormatin(num) + "@s.whatsapp.net"
 				mentionFinalJID, err := types.ParseJID(formatedNum)
 
 				if err != nil {
