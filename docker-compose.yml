@@ -6,6 +6,7 @@ services:
     container_name: postgres
     environment:
       POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: whatsapp
     ports:
       - "5432:5432"
 

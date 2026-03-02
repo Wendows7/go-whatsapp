@@ -11,6 +11,7 @@ import (
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	log "go.mau.fi/whatsmeow/util/log"
 	"os"
+	"time"
 )
 
 func InitClient(ctx context.Context) *whatsmeow.Client {
@@ -101,210 +102,59 @@ func SaveGroup(db *sql.DB, client *whatsmeow.Client) error {
 	return nil
 }
 
-//func ConnectClient(client *whatsmeow.Client, ctx context.Context) {
-//
-//	if client.Store.ID == nil {
-//		qrChan, _ := client.GetQRChannel(ctx)
-//		err := client.Connect()
-//		if err != nil {
-//			panic(err)
-//		}
-//
-//		for evt := range qrChan {
-//			if evt.Event == "code" {
-//				fmt.Println("Scan QR Code ini dengan WhatsApp:")
-//				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-//			} else if evt.Event == "success" {
-//				fmt.Println("Login berhasil!")
-//				break
-//			} else if evt.Event == "timeout" || evt.Event == "error" {
-//				fmt.Println("Login gagal:", evt.Event)
-//				os.Exit(1)
-//			}
-//		}
-//	} else {
-//		err := client.Connect()
-//		if err != nil {
-//			panic(err)
-//		}
-//		fmt.Println("Berhasil terkoneksi ke WhatsApp!")
-//	}
-//}
+// GenerateNewQR membuat device baru, connect, dan mengembalikan string QR Code.
+// Fungsi ini juga menjalankan goroutine background untuk menangani event success/timeout.
+func GenerateNewQR(container *sqlstore.Container) (string, *whatsmeow.Client, error) {
+	// 1. Buat slot device baru di database (Wajib untuk Multi-Device)
+	device := container.NewDevice()
 
-//const (
-//	messageAPIAddr = ":8080" // Port HTTP server untuk terima perintah kirim pesan
-//)
-//
-//type Handler struct {
-//	client *whatsmeow.Client
-//}
-//
-//type SendMessageRequest struct {
-//	To         string `json:"to"`          // nomor tujuan, misal "6281234567890"
-//	Message    string `json:"message"`     // isi pesan
-//	PrivateKey string `json:"private_key"` // kunci privat untuk otorisasi
-//}
-//
-//type AlertPayload struct {
-//	Alerts []Alert `json:"alerts"`
-//}
-//
-//type Alert struct {
-//	Labels      map[string]string `json:"labels"`
-//	Annotations map[string]string `json:"annotations"`
-//}
-//
-//func main() {
-//	ctx := context.Background()
-//
-//	// Ganti dengan konfigurasi database PostgreSQL mu
-//	dbURI := "postgres://" + env["DB_USERNAME"] + ":" + env["DB_PASSWORD"] + "@" + env["DB_HOSTNAME"] + ":" + env["DB_PORT"] + "/" + env["DB_NAME"] + "?sslmode=disable"
-//
-//	container, err := sqlstore.New(ctx, "postgres", dbURI, log.Noop)
-//	if err != nil {
-//		panic(fmt.Sprintf("Gagal koneksi DB: %v", err))
-//	}
-//
-//	deviceStore, err := container.GetFirstDevice(ctx)
-//	if err != nil {
-//		panic(fmt.Sprintf("Gagal ambil device: %v", err))
-//	}
-//
-//	client := whatsmeow.NewClient(deviceStore, log.Noop)
-//	//handler := &Handler{client: client}
-//	//client.AddEventHandler(handler.HandleEvent)
-//
-//	if client.Store.ID == nil {
-//		qrChan, _ := client.GetQRChannel(ctx)
-//		err = client.Connect()
-//		if err != nil {
-//			panic(err)
-//		}
-//
-//		for evt := range qrChan {
-//			if evt.Event == "code" {
-//				fmt.Println("Scan QR Code ini dengan WhatsApp:")
-//				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-//			} else if evt.Event == "success" {
-//				fmt.Println("Login berhasil!")
-//				break
-//			} else if evt.Event == "timeout" || evt.Event == "error" {
-//				fmt.Println("Login gagal:", evt.Event)
-//				os.Exit(1)
-//			}
-//		}
-//	} else {
-//		err = client.Connect()
-//		if err != nil {
-//			panic(err)
-//		}
-//		fmt.Println("Berhasil terkoneksi ke WhatsApp!")
-//	}
-//
-//	// HTTP server untuk menerima perintah kirim pesan via webhook
-//	http.HandleFunc("/api/webhook/send-message", func(w http.ResponseWriter, r *http.Request) {
-//
-//		if r.Method != http.MethodPost {
-//			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-//			return
-//		}
-//
-//		var req SendMessageRequest
-//		err := json.NewDecoder(r.Body).Decode(&req)
-//
-//		if env["PRIVATE_KEY"] != req.PrivateKey {
-//			http.Error(w, "Unauthorized", http.StatusForbidden)
-//			return
-//		}
-//
-//		if err != nil {
-//			http.Error(w, "Invalid JSON", http.StatusBadRequest)
-//			return
-//		}
-//
-//		if req.To == "" || req.Message == "" {
-//			http.Error(w, "Field 'to' and 'message' required", http.StatusBadRequest)
-//			return
-//		}
-//		phoneNumber := req.To + "@s.whatsapp.net"
-//
-//		jid, err := types.ParseJID(phoneNumber)
-//		if err != nil {
-//			http.Error(w, "Nomor tujuan tidak valid", http.StatusBadRequest)
-//			return
-//		}
-//
-//		_, err = client.SendMessage(ctx, jid, &proto.Message{
-//			Conversation: protoString(req.Message),
-//		})
-//		if err != nil {
-//			http.Error(w, "Gagal kirim pesan: "+err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//
-//		w.WriteHeader(http.StatusOK)
-//		w.Write([]byte("Pesan berhasil dikirim"))
-//	})
-//
-//	// Endpoint for alerting
-//	http.HandleFunc("/api/webhook/send-alert", func(w http.ResponseWriter, r *http.Request) {
-//
-//		phoneNumber := r.URL.Query().Get("number") + "@s.whatsapp.net"
-//		if r.URL.Query().Get("private_key") != env["PRIVATE_KEY"] {
-//			http.Error(w, "Unauthorized", http.StatusForbidden)
-//			return
-//		}
-//
-//		if r.Method != http.MethodPost {
-//			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-//			return
-//		}
-//
-//		var reqAlerting AlertPayload
-//		err := json.NewDecoder(r.Body).Decode(&reqAlerting)
-//
-//		if err != nil {
-//			http.Error(w, "Invalid JSON", http.StatusBadRequest)
-//			return
-//		}
-//
-//		jid, err := types.ParseJID(phoneNumber)
-//		if err != nil {
-//			http.Error(w, "Nomor tujuan tidak valid", http.StatusBadRequest)
-//			return
-//		}
-//
-//		alertingMessage := "*Alertname:* " + reqAlerting.Alerts[0].Labels["alertname"] + "\n*Severity:* " + reqAlerting.Alerts[0].Labels["severity"] + "\n*Title:* " + reqAlerting.Alerts[0].Annotations["title"] + "\n*Description:* " + reqAlerting.Alerts[0].Annotations["description"]
-//
-//		_, err = client.SendMessage(ctx, jid, &proto.Message{
-//			Conversation: protoString(alertingMessage),
-//		})
-//		if err != nil {
-//			http.Error(w, "Gagal kirim pesan: "+err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//
-//		w.WriteHeader(http.StatusOK)
-//		w.Write([]byte("Pesan berhasil dikirim"))
-//	})
-//
-//	go func() {
-//		fmt.Println("HTTP server running di", messageAPIAddr)
-//		err := http.ListenAndServe(messageAPIAddr, nil)
-//		if err != nil {
-//			panic(err)
-//		}
-//	}()
-//
-//	// Tunggu signal untuk graceful shutdown
-//	ch := make(chan os.Signal, 1)
-//	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-//	<-ch
-//
-//	client.Disconnect()
-//	fmt.Println("Client WhatsApp terputus. Program selesai.")
-//}
-//
-//func protoString(s string) *string {
-//	return &s
-//}
+	// 2. Buat instance client baru
+	client := whatsmeow.NewClient(device, log.Noop)
+
+	// 3. Dapatkan channel QR
+	qrChan, _ := client.GetQRChannel(context.Background())
+
+	// 4. Connect ke WhatsApp
+	if err := client.Connect(); err != nil {
+		return "", nil, fmt.Errorf("gagal connect client baru: %v", err)
+	}
+
+	// 5. Tunggu QR Code pertama muncul (Blocking sementara dengan timeout)
+	// Kita gunakan Select agar API tidak hang selamanya jika ada error
+	var qrCode string
+
+	select {
+	case evt := <-qrChan:
+		if evt.Event == "code" {
+			qrCode = evt.Code
+		} else {
+			return "", nil, fmt.Errorf("event pertama bukan code: %s", evt.Event)
+		}
+	case <-time.After(10 * time.Second):
+		client.Disconnect()
+		return "", nil, fmt.Errorf("timeout menunggu QR Code dari WhatsApp")
+	}
+
+	// 6. Jalankan Listener di Background (Goroutine)
+	// PENTING: Kita harus tetap mendengarkan channel ini sampai 'success' atau 'timeout'
+	// meskipun kita sudah return QR Code ke API.
+	go func() {
+		for evt := range qrChan {
+			if evt.Event == "success" {
+				fmt.Printf("Login Berhasil untuk Device JID: %s\n", client.Store.ID)
+
+				// TODO: Di sini Anda bisa simpan client ke map global agar bisa dipakai kirim pesan
+				// Contoh: globalClients[client.Store.ID.User] = client
+
+				break // Keluar dari loop listener
+			} else if evt.Event == "timeout" {
+				fmt.Println("Login Timeout (User tidak scan)")
+				client.Disconnect() // Matikan koneksi biar hemat resource
+				break
+			}
+		}
+	}()
+
+	// Kembalikan QR Code string dan object client
+	return qrCode, client, nil
+}
